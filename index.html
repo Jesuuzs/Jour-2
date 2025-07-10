@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Redressement Stratégique - Projet BRAIN IT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Executive Blue -->
+    <!-- Application Structure Plan: L'application est une SPA entièrement repensée autour d'un concept de "dashboard unifié". Chaque section est désormais une "carte" analytique dans une grille globale, adoptant le style du dashboard initial. Cette approche crée une expérience visuelle cohérente et haut de gamme. Le flux narratif est conservé : Dashboard -> Diagnostic -> Solutions -> Plan -> Avenant, mais présenté dans un format plus intégré et dynamique. -->
+    <!-- Visualization & Content Choices: 
+        - Dashboard (Info Rapport) -> But: Synthétiser -> Viz: KPI cards, Graphe à barres -> Interaction: Tooltips -> Justification: Vue d'ensemble percutante.
+        - Diagnostic (Info Rapport) -> But: Détailler -> Viz: Graphe à barres détaillé dans une "chart-card" -> Interaction: Tooltips -> Justification: Analyse chiffrée claire.
+        - Solutions & Dialogue (Demande utilisateur) -> But: Convaincre -> Viz: Accordéon interactif dans une "content-card" -> Interaction: Clic -> Justification: Dialogue structuré et engageant.
+        - Plan de Reprise (Info Rapport) -> But: Projeter -> Viz: Timeline verticale dans une "content-card" -> Interaction: Apparition au défilement -> Justification: Présentation dynamique du plan.
+        - Avenant (Info Rapport) -> But: Négocier -> Viz: Graphe en anneau et texte dans une "content-card" -> Interaction: Tooltips -> Justification: Proposition financière claire et visuelle.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+            color: #475569; /* slate-600 */
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4338ca; /* indigo-700 */
+            transition: width 0.3s ease-in-out;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .nav-link.active {
+            color: #312e81; /* indigo-900 */
+            font-weight: 600;
+        }
+        .animated-card {
+            background: white;
+            border-radius: 1rem; /* 16px */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUP 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .animated-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        @keyframes fadeInUP {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .solution-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+            padding: 0 1.5rem;
+        }
+    </style>
+</head>
+<body class="text-slate-700 antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-800">BRAIN IT : Plan de Redressement</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#dashboard" class="nav-link px-1 py-2 text-sm font-medium">Dashboard</a>
+                        <a href="#diagnostic" class="nav-link px-1 py-2 text-sm font-medium">Diagnostic</a>
+                        <a href="#solutions" class="nav-link px-1 py-2 text-sm font-medium">Solutions & Dialogue</a>
+                        <a href="#plan" class="nav-link px-1 py-2 text-sm font-medium">Plan de Reprise</a>
+                        <a href="#negociation" class="nav-link px-1 py-2 text-sm font-medium">Avenant</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
+
+        <section id="dashboard" class="pt-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">Dashboard de Crise</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg leading-8 text-slate-500">Une vue d'ensemble pour un constat partagé et une action immédiate.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="animated-card p-6">
+                        <h3 class="text-lg font-semibold text-slate-500">Dérive Budgétaire</h3>
+                        <p class="text-5xl font-extrabold text-red-600 mt-2">+32,7%</p>
+                        <p class="text-slate-500">soit 640 J/H de dérapage projeté.</p>
+                    </div>
+                    <div class="animated-card p-6" style="animation-delay: 0.1s;">
+                        <h3 class="text-lg font-semibold text-slate-500">Indicateurs Qualitatifs</h3>
+                        <div class="mt-3 space-y-3">
+                            <div class="flex items-center justify-between"><span class="text-slate-600">Confiance Client</span><span class="font-bold text-red-600 text-sm bg-red-100 px-2 py-1 rounded-full">Critique</span></div>
+                            <div class="flex items-center justify-between"><span class="text-slate-600">Moral Équipe</span><span class="font-bold text-red-600 text-sm bg-red-100 px-2 py-1 rounded-full">Critique</span></div>
+                            <div class="flex items-center justify-between"><span class="text-slate-600">Gouvernance</span><span class="font-bold text-red-600 text-sm bg-red-100 px-2 py-1 rounded-full">Absente</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 animated-card p-8" style="animation-delay: 0.2s;">
+                    <h3 class="text-xl font-bold text-center mb-4 text-slate-800">Attribution du Dérapage (640 J/H)</h3>
+                    <div class="h-80">
+                        <canvas id="partageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="diagnostic" class="pt-16">
+            <div class="animated-card p-8">
+                 <div class="text-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Diagnostic Détaillé</h2>
+                    <p class="mt-2 text-lg text-slate-500">La réalité en chiffres de la dérive du projet.</p>
+                </div>
+                <div class="h-96">
+                    <canvas id="derapageChart"></canvas>
+                </div>
+                <div class="mt-6 text-center bg-amber-50 border-l-4 border-amber-400 text-amber-800 p-4 rounded-r-lg">
+                    <p><span class="font-bold">Point de vigilance :</span> La fiabilité du Reste à Faire (RAF) est incertaine. Notre première action sera un audit complet pour établir une nouvelle estimation crédible.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="solutions" class="pt-16">
+            <div class="animated-card p-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Solutions Stratégiques & Dialogue</h2>
+                    <p class="mt-2 text-lg text-slate-500">Notre vision pour transformer chaque problème en opportunité.</p>
+                </div>
+                <div class="space-y-6" id="solutions-container">
+                    <!-- Solutions & Objections will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+        
+        <section id="plan" class="pt-16">
+            <div class="animated-card p-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Le Plan de Reprise Détaillé</h2>
+                    <p class="mt-2 text-lg text-slate-500">Notre engagement concret pour la réussite, en 3 phases claires.</p>
+                </div>
+                <div class="relative" id="timeline">
+                    <!-- Timeline items will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <section id="negociation" class="pt-16">
+             <div class="animated-card p-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Proposition d'Avenant</h2>
+                    <p class="mt-2 text-lg text-slate-500">Un investissement pour sécuriser le projet, basé sur un partage équitable des responsabilités.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">Un Contrat Devenu Caduc</h3>
+                        <p class="text-slate-600">Le contrat initial a été rendu caduc par des modifications substantielles. Les <span class="font-bold text-indigo-600">640 J/H de surcoûts</span> constituent une modification de l'objet du contrat qui justifie un avenant.</p>
+                        <h3 class="text-2xl font-bold mt-8 mb-4 text-slate-800">Contenu de l'Avenant</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li>Modification du périmètre, planning, budget et gouvernance.</li>
+                            <li>Nouvelle charge projetée : <span class="font-bold text-indigo-600">2276 J/H</span> (1956 + 320).</li>
+                            <li>Nouvelle feuille de route et gouvernance en annexes.</li>
+                        </ul>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">Partage Proposé</h3>
+                        <div class="h-80">
+                            <canvas id="negociationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-24">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm">
+            Dashboard de Redressement Stratégique BRAIN IT &copy; 2024. Confidentiel.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartFontColor = '#64748b'; // slate-500
+            const chartGridColor = '#f1f5f9'; // slate-100
+
+            // Partage Chart (Dashboard)
+            const partageCtx = document.getElementById('partageChart').getContext('2d');
+            new Chart(partageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dérive Périmètre (Client)', 'Retards (Client)', 'Inefficacité (BRAIN IT)', 'Retards (Tiers)'],
+                    datasets: [{
+                        label: 'Jours-Homme',
+                        data: [500, 140, 120, 20],
+                        backgroundColor: ['#4f46e5', '#818cf8', '#dc2626', '#f59e0b'],
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: {
+                        callbacks: { label: (c) => ` ${c.raw} J/H` }
+                    }},
+                    scales: {
+                        x: { stacked: true, grid: { color: chartGridColor }, ticks: { color: chartFontColor } },
+                        y: { stacked: true, grid: { display: false }, ticks: { color: chartFontColor, font: { weight: '600' } } }
+                    }
+                }
+            });
+
+            // Derapage Chart (Diagnostic)
+            const derapageCtx = document.getElementById('derapageChart').getContext('2d');
+            new Chart(derapageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Charge Vendue', 'Charge Consommée', 'Reste à Faire (RAF)', 'Atterrissage Projeté', 'Dérapage Total'],
+                    datasets: [{
+                        label: 'Jours-Homme',
+                        data: [1956, 800, 1800, 2600, 640],
+                        backgroundColor: ['#0d9488', '#f59e0b', '#facc15', '#dc2626', '#64748b'],
+                        borderColor: ['#0f766e', '#b45309', '#eab308', '#b91c1c', '#475569'],
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: {
+                        callbacks: { label: (c) => ` ${c.raw} J/H` }
+                    }},
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: chartGridColor }, ticks: { color: chartFontColor } },
+                        x: { grid: { display: false }, ticks: { color: chartFontColor, font: { weight: '600' } } }
+                    }
+                }
+            });
+
+            // Negociation Chart (Avenant)
+            const negociationCtx = document.getElementById('negociationChart').getContext('2d');
+            new Chart(negociationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Part absorbée par BRAIN IT', 'Avenant demandé au Client'],
+                    datasets: [{
+                        label: 'Partage du dérapage (en J/H)',
+                        data: [320, 320],
+                        backgroundColor: ['#dc2626', '#0d9488'],
+                        borderColor: '#ffffff',
+                        borderWidth: 5,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: chartFontColor, usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed} J/H` } }
+                    }
+                }
+            });
+
+            // Solutions & Objections
+            const solutionsData = [
+                 {
+                    problem: "Anarchie Méthodologique",
+                    enjeux: "Perte de contrôle totale, gaspillage des ressources, incapacité à livrer de la valeur, crédibilité du DSI menacée.",
+                    vision: "Un partenariat où l'Agilité est un moteur de performance, offrant une visibilité totale, une livraison de valeur prévisible et une capacité d'adaptation maîtrisée.",
+                    solution: "Mise en place d'une 'Agilité Disciplinée' avec un cadre strict, des rituels respectés et des validations formelles à chaque fin de sprint.",
+                    objection: "Votre méthode Agile ne marche pas, c'est de l'anarchie !",
+                    response: "Vous avez raison. Ce que nous avons fait était du chaos. Le nouveau cadre que nous imposons est basé sur la discipline et la transparence pour vous redonner le contrôle."
+                },
+                {
+                    problem: "Turnover et Management Toxique",
+                    enjeux: "Hémorragie des compétences, perte de la mémoire du projet, démotivation de l'équipe restante, impossibilité de garantir la qualité.",
+                    vision: "Une équipe projet stable, engagée et performante, dirigée par un leadership senior qui inspire la confiance et favorise l'excellence.",
+                    solution: "Remplacement immédiat du chef de projet par un Directeur de projet senior (Nicolas DELAPLACE), audit du climat social et plan de rétention des talents.",
+                    objection: "Comment avoir confiance alors que votre équipe change constamment ?",
+                    response: "Le turnover est notre échec, nous l'assumons. C'est la conséquence d'un management que nous changeons aujourd'hui. Nous nous engageons sur la stabilité de la nouvelle équipe."
+                },
+                {
+                    problem: "Rupture de Confiance Métier",
+                    enjeux: "Le projet livre une solution techniquement fonctionnelle mais inutile pour le métier. Rejet de l'outil par les utilisateurs, échec de l'adoption, ROI nul.",
+                    vision: "Un partenariat tripartite (DSI, Métier, Brain IT) où le directeur du magasin est un champion du projet, activement impliqué et convaincu que la solution est construite pour lui et avec lui.",
+                    solution: "Le nouveau DP prendra contact, mènera une session d'écoute, co-construira le backlog du MVP et donnera au gérant du magasin le pouvoir de validation.",
+                    objection: "Le gérant du magasin ne veut plus travailler avec nous.",
+                    response: "Nous comprenons sa frustration. Notre plan est de le remettre au centre du projet. En lui donnant la priorité et le pouvoir de valider, nous reconstruirons la confiance par les actes."
+                }
+            ];
+
+            const solutionsContainer = document.getElementById('solutions-container');
+            solutionsData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'border border-slate-200 rounded-lg overflow-hidden';
+                div.innerHTML = `
+                    <button class="solution-trigger w-full text-left p-5 flex justify-between items-center bg-slate-50 hover:bg-slate-100 transition duration-300">
+                        <span class="font-bold text-lg text-indigo-800">${item.problem}</span>
+                        <svg class="solution-arrow w-6 h-6 text-indigo-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="solution-content bg-white">
+                        <div class="divide-y divide-slate-200">
+                            <div class="p-5">
+                                <h4 class="font-semibold text-slate-500">Les Enjeux</h4>
+                                <p class="text-sm text-red-700 mt-1">${item.enjeux}</p>
+                            </div>
+                            <div class="p-5">
+                                <h4 class="font-semibold text-slate-500">Notre Vision</h4>
+                                <p class="text-sm text-green-700 mt-1">${item.vision}</p>
+                            </div>
+                             <div class="p-5 bg-slate-50">
+                                <h4 class="font-semibold text-slate-800">Dialogue & Résolution</h4>
+                                <p class="text-sm text-slate-600 mt-2"><span class="font-bold">Solution Concrète:</span> ${item.solution}</p>
+                                <div class="mt-4 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                                    <p class="text-sm text-slate-700 italic">"${item.objection}"</p>
+                                    <p class="text-sm text-slate-700 mt-2"><span class="font-bold">Notre Réponse :</span> ${item.response}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                solutionsContainer.appendChild(div);
+            });
+
+            document.querySelectorAll('.solution-trigger').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const arrow = button.querySelector('.solution-arrow');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        content.style.padding = "0 1.5rem";
+                        arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('.solution-content').forEach(c => { c.style.maxHeight = null; c.style.padding = "0 1.5rem"; });
+                        document.querySelectorAll('.solution-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+                        content.style.paddingTop = "0";
+                        content.style.paddingBottom = "0";
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            // Timeline
+            const timelineData = [
+                { phase: "Phase 1", title: "Stabilisation & Audit", duration: "4 semaines", items: ["**Action :** Remplacement du Chef de Projet par un Directeur de projet senior.", "**Action :** Ateliers de diagnostic avec les parties prenantes (DSI, Métier).", "**Action :** Gel des développements et audit complet du code et du RAF.", "**Livrable :** Rapport d'audit et nouvelle estimation de charge validée."] },
+                { phase: "Phase 2", title: "Replanification & MVP", duration: "4 semaines", items: ["**Action :** Ateliers MoSCoW pour définir le périmètre exact du MVP.", "**Action :** Élaboration de la nouvelle feuille de route détaillée.", "**Action :** Mise en place de la nouvelle gouvernance (PMO, rituels).", "**Livrable :** Backlog priorisé et nouvelle planification signée."] },
+                { phase: "Phase 3", title: "Exécution & Déploiement", duration: "Continu", items: ["**Action :** Reprise des cycles de développement agiles et disciplinés.", "**Action :** Comités de projet hebdomadaires avec revue des risques.", "**Action :** Cycle de feedback continu avec les utilisateurs finaux.", "**Livrable :** Incréments fonctionnels validés à chaque fin de sprint."] }
+            ];
+
+            const timelineContainer = document.getElementById('timeline');
+            timelineContainer.innerHTML = '<div class="absolute left-4 md:left-1/2 w-1 h-full bg-indigo-200 -ml-0.5"></div>';
+            timelineData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'md:flex items-center odd:flex-row-reverse';
+                div.innerHTML = `
+                    <div class="md:w-1/2 ${'odd:md:text-right odd:md:pr-8 even:md:pl-8'}">
+                        <div class="p-6 inline-block">
+                            <p class="text-sm font-semibold text-indigo-600">${item.phase} (${item.duration})</p>
+                            <h3 class="text-xl font-bold mt-1 text-slate-800">${item.title}</h3>
+                            <ul class="mt-3 text-slate-600 text-sm space-y-2">
+                                ${item.items.map(li => `<li>${li.replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-slate-700">$1</span>')}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="absolute left-4 md:left-1/2 w-8 h-8 -ml-4 bg-indigo-600 rounded-full border-4 border-white flex items-center justify-center text-white font-bold">${timelineData.indexOf(item) + 1}</div>
+                `;
+                timelineContainer.appendChild(div);
+            });
+
+            // Active nav link scrolling
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
